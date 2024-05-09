@@ -12,9 +12,17 @@ import pandas as pd
 from argparse import ArgumentParser
 
 def keep_relevant_columns(df):
-    df['all_foi_bodyText'] = np.where(df['bodytext_foi_bodyTextOCR'].notnull() & df['bodytext_foi_bodyTextOCR'].str.strip().ne(''), df['bodytext_foi_bodyTextOCR'], df['bodytext_foi_bodyText'])
+    # Explicitly create a copy of the DataFrame to avoid setting-with-copy warning
+    df = df.copy()
 
-    # Only keep the necessary columns, and rename them
+    # Use .loc to ensure that changes are made directly in the copied DataFrame
+    df.loc[:, 'all_foi_bodyText'] = np.where(
+        df['bodytext_foi_bodyTextOCR'].notnull() & df['bodytext_foi_bodyTextOCR'].str.strip().ne(''), 
+        df['bodytext_foi_bodyTextOCR'], 
+        df['bodytext_foi_bodyText']
+    )
+
+    # Define the columns to rename
     rename_dict = {
         'id': 'page_id',
         'foi_documentId': 'document_id',
@@ -24,49 +32,61 @@ def keep_relevant_columns(df):
         'dossiers_dc_publisher_name': 'publisher',
         'documents_dc_source': 'source'
     }
-    return df.rename(columns=rename_dict)[['page_id', 'document_id', 'dossier_id', 'bodyText', 'type', 'publisher', 'source']]
+    
+    # Rename the columns
+    df = df.rename(columns=rename_dict)
+    
+    # Select and return only the necessary columns
+    return df[['page_id', 'document_id', 'dossier_id', 'bodyText', 'type', 'publisher', 'source']]
 
-def intersection_of_tuples(list1, list2):
-    # Convert lists of tuples to sets
-    set1 = set(list1)
-    set2 = set(list2)
+def get_first_n_dossiers_by_ministry(tuples, n, ministry, closest_nr_docs=20):
+    # Filter tuples by the specified ministry and calculate the difference from 20
+    filtered_and_diff = [(dossier_id, abs(num - closest_nr_docs))
+                         for dossier_id, dossier_ministry, num in tuples
+                         if dossier_ministry.lower() == ministry.lower()]
 
-    # Find intersection
-    intersection_set = set1 & set2
+    # Sort by the difference (second element in the tuple)
+    sorted_by_closest = sorted(filtered_and_diff, key=lambda x: x[1])
 
-    # Convert the set back to a list of tuples
-    return list(intersection_set)
+    # Get the top n dossiers
+    results = [dossier_id for dossier_id, diff in sorted_by_closest[:n]]
 
-def left_join_of_tuples(list1, list2):
-    # Convert lists of tuples to sets
-    set1 = set(list1)
-    set2 = set(list2)
-
-    # Find left join
-    left_join_set = set1 - set2
-
-    # Convert the set back to a list of tuples
-    return list(left_join_set)
-
-def make_unique_tuple(tuple_list):
-    id_list = []
-    unique_list = []
-    for id, publisher  in tuple_list:
-        if id not in id_list:
-            id_list.append(id)
-            unique_list.append((id, publisher))
-    return unique_list
-
-def get_first_n_dossiers_by_ministry(tuples, n, ministry):
-    results = []
-    for dossier_id, dossier_ministry in tuples:
-        if dossier_ministry.lower() == ministry:
-            results.append(dossier_id)
-            if len(results) == n:
-                break
     if len(results) < n:
         print(f"[Warning] ~ Only {len(results)} dossiers found for {ministry}, with n={n}.")
+
     return results
+
+def make_unique_tuple(tuple_list):
+    # Dictionary to store ID as key and a tuple of (publisher, count) as value
+    count_dict = {}
+    
+    # Iterate over each tuple in the input list
+    for id, publisher in tuple_list:
+        if id in count_dict:
+            # Increase the count for this ID
+            current_publisher, current_count = count_dict[id]
+            count_dict[id] = (current_publisher, current_count + 1)
+        else:
+            # Add new ID with the publisher and initial count of 1
+            count_dict[id] = (publisher, 1)
+    
+    # Generate the list of unique tuples with counts
+    return [(id, publisher, count) for id, (publisher, count) in count_dict.items()]
+
+def intersection_of_tuples(list1, list2):
+    # Create a dictionary from list1 where key is the first element of each tuple
+    dict1 = {t[0]: t for t in list1}
+    
+    # Create a set from the first elements of each tuple in list2
+    set2 = {t[0] for t in list2}
+    
+    # Find intersection of keys from dict1 and elements in set2
+    intersection_keys = set(dict1.keys()) & set2
+
+    # Retrieve the full tuples from dict1 based on the intersection keys
+    return [dict1[key] for key in intersection_keys]
+
+
 
 def main():
     parser = ArgumentParser(description="Document ingestion script using the Ingester class.")
@@ -97,17 +117,14 @@ def main():
     filtered_df_attachment = woo_data[(woo_data['dossiers_dc_publisher_name'].str.contains("Ministerie", case=False)) & (woo_data['documents_dc_type'] == "bijlage")]
     dossier_ids_with_publishers_attachment = list(zip(filtered_df_attachment['foi_dossierId'], filtered_df_attachment['dossiers_dc_publisher_name']))
     dossier_tuple_attachment = make_unique_tuple(dossier_ids_with_publishers_attachment)
-    
+
     # Make a full tuple of all dossiers
     full_dossier_ids = list(zip(filtered_df_attachment['foi_dossierId'], filtered_df_attachment['dossiers_dc_publisher_name']))
     full_tuple = make_unique_tuple(full_dossier_ids)
 
-    # Get the intersection of the two sets
-    unique_foi_dossier_ids = intersection_of_tuples(dossier_tuple_request, dossier_tuple_attachment)
-    unique_foi_dossier_ids
+    # Get the intersection of the two sets, with the number of attachments as quantity number
+    unique_foi_dossier_ids = intersection_of_tuples(dossier_tuple_attachment, dossier_tuple_request)
     
-    full_tuple_left_join = left_join_of_tuples(full_tuple, unique_foi_dossier_ids)
-
     ministries = [
         "ministerie van landbouw, natuur en voedselkwaliteit",
         "ministerie van financiën",
@@ -130,8 +147,15 @@ def main():
         nr_of_dossiers = 0
         for ministry in ministries:
             dossiers = get_first_n_dossiers_by_ministry(unique_foi_dossier_ids, 1, ministry)
+            
             if i == 5:
-                dossiers += get_first_n_dossiers_by_ministry(full_tuple_left_join, 4, ministry)
+                temp_dossiers = get_first_n_dossiers_by_ministry(full_tuple, 5, ministry)
+                for j in temp_dossiers:
+                    if j not in dossiers:
+                        dossiers.append(j)
+                    if len(dossiers) == 5:
+                        break
+                    
             nr_of_dossiers += len(dossiers)
             # Filter the DataFrame for the dossiers
             woo_data_filtered = filtered_df[filtered_df['foi_dossierId'].isin(dossiers)]
