@@ -131,7 +131,7 @@ def main():
         result.loc[len(result)] = new_row
 
     result.to_csv(
-        f"evaluation/results/document_similarity_{collection_name}_{embedding_function}.csv"
+        f"evaluation/results/document_similarity_{content_folder_name}_{collection_name}_{embedding_function}.csv"
     )
     print(
         f"[Info] ~ Result embeddings document similarity for {content_folder_name} with {embedding_function} saved.",

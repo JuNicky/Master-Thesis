@@ -1,3 +1,6 @@
+# Examples with arguments:
+# python check_bm25_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs_ministries --dataset_folder_name 12_dossiers_no_requests --results_folder ./evaluation/results
+# python check_bm25_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs_ministries --dataset_folder_name 60_dossiers_no_requests --results_folder ./evaluation/results
 import heapq
 import pandas as pd
 import re
@@ -79,13 +82,15 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("--content_folder_name", type=str)
     parser.add_argument("--documents_directory", type=str)
+    parser.add_argument("--dataset_folder_name", type=str)
     parser.add_argument("--results_folder", type=str)
     args = parser.parse_args()
     # content_folder_name = "12_dossiers_no_requests"
 
-    if args.content_folder_name and args.documents_directory and args.results_folder:
+    if args.content_folder_name and args.documents_directory and args.dataset_folder_name and args.results_folder:
         content_folder_name = args.content_folder_name
         documents_directory = args.documents_directory
+        dataset_folder_name = args.dataset_folder_name
         results_folder = args.results_folder
     else:
         raise ValueError("Please provide all arguments.")
@@ -135,7 +140,7 @@ def main():
     )
 
     woo_data_subset = pd.read_csv(
-        f"./{documents_directory}/{content_folder_name}/woo_merged.csv.gz"
+        f"./{documents_directory}/{dataset_folder_name}/woo_merged.csv.gz"
     )
     for _, row in woo_data_subset.iterrows():
         if pd.isna(row["bodyText"]):
@@ -193,7 +198,7 @@ def main():
         # Append the new row to the DataFrame
         result.loc[len(result)] = new_row
 
-    result.to_csv("evaluation/results/document_similarity_60_dossiers_bm25.csv")
+    result.to_csv(f"{results_folder}/document_similarity_{content_folder_name}_{dataset_folder_name}_bm25.csv")
     print(
         f"[Info] ~ Result BM25 document similarity for {content_folder_name} saved.",
         flush=True,
