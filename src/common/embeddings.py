@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.embeddings import Embeddings
-from common.huggingface_login import login_huggingface
 
 
 def getEmbeddings(embeddings_provider: str, embeddings_model_name: str) -> Embeddings:
@@ -16,7 +15,6 @@ def getEmbeddings(embeddings_provider: str, embeddings_model_name: str) -> Embed
         Embeddings: The retrieved embeddings.
     """
     if embeddings_provider == "local_embeddings":
-        login_huggingface()
         model_kwargs = {"device": "cpu"}
         encode_kwargs = {"normalize_embeddings": False}
         embeddings = HuggingFaceEmbeddings(
