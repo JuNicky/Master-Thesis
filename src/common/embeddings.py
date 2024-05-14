@@ -31,5 +31,5 @@ def getEmbeddings(embeddings_provider: str, embeddings_model_name: str) -> Embed
             tokenizer = embeddings.client.tokenizer
             tokenizer.pad_token = tokenizer.eos_token
 
-        print(f"[Info] ~ Loaded local embeddings: {embeddings_model_name}")
+        print(f"[Info] ~ Loaded local embeddings: {embeddings_model_name}", flush=True)
     return embeddings

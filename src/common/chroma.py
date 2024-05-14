@@ -22,5 +22,5 @@ def get_chroma_vector_store(
         persist_directory=vectordb_folder,
         collection_metadata={"hnsw:space": "cosine"},
     )
-    print(f"[Info] ~ Loaded Chroma vector store for {collection_name}")
+    print(f"[Info] ~ Loaded Chroma vector store for {collection_name}", flush=True)
     return vector_store

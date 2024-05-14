@@ -8,4 +8,4 @@ def login_huggingface():
     Requires the HUGGINGFACEHUB_API_TOKEN environment variable to be set.
     """
     login(os.environ.get("HUGGINGFACEHUB_API_TOKEN"))
-    print("[Info] ~ Logged in to Huggingface.")
+    print("[Info] ~ Logged in to Huggingface.", flush=True)
