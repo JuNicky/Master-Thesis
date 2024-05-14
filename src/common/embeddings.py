@@ -32,4 +32,6 @@ def getEmbeddings(embeddings_provider: str, embeddings_model_name: str) -> Embed
             tokenizer.pad_token = tokenizer.eos_token
 
         print(f"[Info] ~ Loaded local embeddings: {embeddings_model_name}", flush=True)
+    else:
+        raise ValueError(f"Unknown embeddings provider: {embeddings_provider}")
     return embeddings
