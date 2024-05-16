@@ -1,6 +1,6 @@
 # Examples with arguments:
-# python check_embeddings_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs_ministries --embedding_provider local_embeddings --embedding_author GroNLP --embedding_function bert-base-dutch-cased --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_GroNLP/bert-base-dutch-cased
-# python check_embeddings_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs_ministries --embedding_provider local_embeddings --embedding_author GroNLP --embedding_function bert-base-dutch-cased --collection_name 60_dossiers_no_requests --vector_db_folder ./vector_stores/60_dossiers_no_requests_chromadb_1024_256_local_embeddings_GroNLP/bert-base-dutch-cased
+# python evaluate_embeddings_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --embedding_provider local_embeddings --embedding_author GroNLP --embedding_function bert-base-dutch-cased --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_GroNLP/bert-base-dutch-cased
+# python evaluate_embeddings_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --embedding_provider local_embeddings --embedding_author meta-llama --embedding_function Meta-Llama-3-8B --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_meta-llama/Meta-Llama-3-8B
 
 import pandas as pd
 from argparse import ArgumentParser

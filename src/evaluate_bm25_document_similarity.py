@@ -1,6 +1,7 @@
 # Examples with arguments:
-# python check_bm25_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs_ministries --dataset_folder_name 12_dossiers_no_requests --results_folder ./evaluation/results
-# python check_bm25_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs_ministries --dataset_folder_name 60_dossiers_no_requests --results_folder ./evaluation/results
+# python evaluate_bm25_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --dataset_folder_name 12_dossiers_no_requests --results_folder ./evaluation/results
+# python evaluate_bm25_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --dataset_folder_name 60_dossiers_no_requests --results_folder ./evaluation/results
+
 import heapq
 import pandas as pd
 import re
@@ -14,6 +15,8 @@ from rank_bm25 import BM25Okapi
 def preprocess_text(
     text: str, index: int = 0, print_progress: bool = True, print_freq: int = 100
 ) -> list[str]:
+    if type(text) != str:
+        return []
     if print_progress and index and index % print_freq == 0:
         print(f"Processing document {index}", flush=True)
 
@@ -154,7 +157,7 @@ def main():
         doc_scores = bm25okapi.get_scores(tokenized_query)
 
         n_pages_result = heapq.nlargest(
-            21, range(len(doc_scores)), key=doc_scores.__getitem__
+            22, range(len(doc_scores)), key=doc_scores.__getitem__
         )
         retrieved_page_ids = []
         retrieved_dossier_ids = []
@@ -166,9 +169,8 @@ def main():
             if len(retrieved_page_ids) == 20:
                 print("[Info] ~ 20 documents retrieved", flush=True)
                 break
-            retrieved_page_ids.append(woo_data["document_id"][i])
+            retrieved_page_ids.append(woo_data["page_id"][i])
             retrieved_dossier_ids.append(woo_data["dossier_id"][i])
-
         new_row = {
             "page_id": row["page_id"],
             "dossier_id": row["dossier_id"],

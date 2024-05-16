@@ -3,8 +3,8 @@
 # { "bodytext": {"pages": [page1, page2, ...], "documents": [document1, document2, ...], "dossier": [dossierId] }
 
 # Examples with arguments:
-# python create_evaluation_file.py -c WoogleDumps_01-04-2024_12817_dossiers_12_dossiers -d docs_ministries -e evaluation
-# python create_evaluation_file.py -c 12_dossiers -d docs_ministries -e evaluation
+# python create_evaluation_file.py -c WoogleDumps_01-04-2024_12817_dossiers_12_dossiers -d ./docs -e ./evaluation
+# python create_evaluation_file.py -c 12_dossiers -d ./docs -e ./evaluation
 
 import json
 import os

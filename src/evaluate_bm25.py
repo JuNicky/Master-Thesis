@@ -1,8 +1,7 @@
 # Example with arguments:
-# python evaluate_bm25.py -a BM25Okapi -c WoogleDumps_01-04-2024_10_dossiers_no_requests_fake_stopwords -d ../docs -e evaluation_request_WoogleDumps_01-04-2024_10_dossiers_no_requests.json
-# python evaluate_bm25.py -c 12_dossiers_no_requests -d ../docs_ministries -e evaluation_request_Ministries_12_dossiers_no_requests.json
-# python evaluate_bm25.py -c 12_dossiers_no_requests -d /scratch/nju/docs -e evaluation_request_Ministries_12_dossiers_no_requests_keywords.json
-# python evaluate_bm25.py -a BM25Okapi -c 12_dossiers_no_requests -d ./docs_ministries -e evaluation_request_12_dossiers_no_requests_keywords.json
+# python evaluate_bm25.py -a BM25Okapi -c WoogleDumps_01-04-2024_10_dossiers_no_requests_fake_stopwords -d ./docs -e evaluation_request_WoogleDumps_01-04-2024_10_dossiers_no_requests.json
+# python evaluate_bm25.py -a BM25Okapi -c 12_dossiers_no_requests -d ./docs -e evaluation_request_12_dossiers_no_requests.json
+# python evaluate_bm25.py -a BM25Okapi -c 12_dossiers_no_requests -d ./docs -e evaluation_request_60_dossiers_no_requests.json
 import heapq
 import json
 import nltk

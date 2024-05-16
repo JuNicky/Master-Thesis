@@ -1,12 +1,8 @@
 # Example with arguments:
-# python evaluate_embeddings.py --evaluation_file evaluation_request_WoogleDumps_01-04-2024_12817_dossiers_no_requests.json --embedding_provider local_embeddings --embedding_author GroNLP --embedding_function bert-base-dutch-cased --collection_name WoogleDumps_01-04-2024_12817_dossiers_no_requests_part_1 --vector_db_folder /scratch/nju/vector_stores/WoogleDumps_01-04-2024_12817_dossiers_no_requests_part_1_chromadb_1024_256_local_embeddings_GroNLP/bert-base-dutch-cased
-# python evaluate_embeddings.py --evaluation_file evaluation_request_Ministries_12_dossiers_no_requests.json --embedding_provider local_embeddings --embedding_author GroNLP --embedding_function bert-base-dutch-cased --collection_name 12_dossiers_no_requests --vector_db_folder ../vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_GroNLP/bert-base-dutch-cased
-# python evaluate_embeddings.py --evaluation_file evaluation_request_Ministries_12_dossiers_no_requests.json --embedding_provider local_embeddings --embedding_author sentence-transformers --embedding_function all-MiniLM-L6-v2 --collection_name 12_dossiers_no_requests --vector_db_folder ../vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_sentence-transformers/all-MiniLM-L6-v2
-
-# Import from the main folder, instead of the current folder
+# python evaluate_embeddings.py --evaluation_file evaluation_request_12_dossiers_no_requests.json --embedding_provider local_embeddings --embedding_author GroNLP --embedding_function bert-base-dutch-cased --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_GroNLP/bert-base-dutch-cased
+# python evaluate_embeddings.py --evaluation_file evaluation_request_12_dossiers_no_requests.json --embedding_provider local_embeddings --embedding_author meta-llama --embedding_function Meta-Llama-3-8B --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_meta-llama/Meta-Llama-3-8B
 
 import json
-import re
 import os
 import pandas as pd
 from argparse import ArgumentParser

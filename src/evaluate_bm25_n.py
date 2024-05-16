@@ -1,8 +1,7 @@
 # Example with arguments:
 # python evaluate_bm25.py -a BM25Okapi -c WoogleDumps_01-04-2024_10_dossiers_no_requests_fake_stopwords -d ../docs -e evaluation_request_WoogleDumps_01-04-2024_10_dossiers_no_requests.json
-# python evaluate_bm25.py -c 12_dossiers_no_requests -d ../docs_ministries -e evaluation_request_Ministries_12_dossiers_no_requests.json
-# python evaluate_bm25.py -c 12_dossiers_no_requests -d /scratch/nju/docs -e evaluation_request_Ministries_12_dossiers_no_requests_keywords.json
-# python evaluate_bm25.py -a BM25Okapi -c 12_dossiers_no_requests -d ./docs_ministries -e evaluation_request_12_dossiers_no_requests_keywords.json
+# python evaluate_bm25.py -a BM25Okapi -c 12_dossiers_no_requests -d ./docs -e evaluation_request_12_dossiers_no_requests.json
+# python evaluate_bm25.py -a BM25Okapi -c 12_dossiers_no_requests -d ./docs -e evaluation_request_60_dossiers_no_requests.json
 import heapq
 import json
 import nltk
@@ -19,6 +18,8 @@ from rank_bm25 import BM25Okapi, BM25L, BM25Plus
 def preprocess_text(
     text: str, index: int = 0, print_progress: bool = True, print_freq: int = 100
 ) -> list[str]:
+    if type(text) != str:
+        return []
     if print_progress and index and index % print_freq == 0:
         print(f"Processing document {index}", flush=True)
 
@@ -228,7 +229,7 @@ def main():
     print(f"Number of documents in corpus: {len(corpus)}", flush=True)
 
     # Do preprocessing for echt document
-    tokenized_corpus = [tokenize(doc) for doc in corpus]
+    tokenized_corpus = [preprocess_text(doc) for doc in corpus]
 
     with open(evaluation_path, "r") as file:
         evaluation = json.load(file)
