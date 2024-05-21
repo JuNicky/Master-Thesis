@@ -2,55 +2,21 @@
 # python evaluate_embeddings_n.py --evaluation_file evaluation_request_12_dossiers_no_requests.json --embedding_provider local_embeddings --embedding_author GroNLP --embedding_function bert-base-dutch-cased --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_GroNLP/bert-base-dutch-cased
 # python evaluate_embeddings_n.py --evaluation_file evaluation_request_12_dossiers_no_requests.json --embedding_provider local_embeddings --embedding_author meta-llama --embedding_function Meta-Llama-3-8B --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_meta-llama/Meta-Llama-3-8B
 
-import json
 import os
+from dotenv import load_dotenv
+from huggingface_hub import login
+from sys import platform
+load_dotenv()
+login(os.environ.get("HUGGINGFACE_API_TOKEN"))
+if platform == "linux":
+    os.environ['HF_HOME'] = '/scratch/nju'
+    os.environ['HF_HUB_CACHE'] = '/scratch/nju'
+    os.environ['TRANSFORMERS_CACHE'] = '/scratch/nju'
+
+import json
 import pandas as pd
 from argparse import ArgumentParser
 from common.querier import Querier
-
-
-def check_relevance(ground_truth, retrieved) -> int:
-    """
-    Calculates the number of relevant items in the retrieved set.
-
-    Parameters:
-    ground_truth (set): The set of ground truth items.
-    retrieved (set): The set of retrieved items.
-
-    Returns:
-    int: The number of relevant items in the retrieved set.
-    """
-    return len(retrieved.intersection(ground_truth))
-
-
-def get_first_n_unique_ids_by_type(
-    source_documents: list, n: int, id_type: str
-) -> list:
-    """
-    Extracts the first n unique document IDs from a list of source documents.
-
-    Parameters:
-    - source_documents: A list of tuples, where each tuple contains a document object and another value.
-    - n: The number of unique document IDs to retrieve.
-
-    Returns:
-    A list of the first n unique document IDs.
-    """
-
-    if id_type not in ["page_id", "document_id", "dossier_id"]:
-        raise ValueError("id_type must be 'page_id', 'document_id', or 'dossier_id'")
-
-    unique_ids = []
-    seen = set()
-    for doc, _ in source_documents:
-        doc_id = doc.metadata[id_type]
-        if doc_id not in seen:
-            seen.add(doc_id)
-            unique_ids.append(doc_id)
-        if len(unique_ids) == n:
-            break
-
-    return unique_ids
 
 
 def main():
@@ -85,39 +51,19 @@ def main():
         )
         exit()
 
-    # Selecting the paths
-    # path = select_woogle_dump_folders(path='../docs')
-    # evaluation_file = "../evaluation/evaluation_request_WoogleDumps_01-04-2024_50_dossiers_no_requests.json"
-    # embedding_provider = "local_embeddings"
-    # embedding_author = "GroNLP"
-    # embedding_function = "bert-base-dutch-cased"
-    # complete_embedding_function = f"{embedding_author}/{embedding_function}"
-    # collection_name = "WoogleDumps_01-04-2024_12817_dossiers_no_requests_part_1"
-    # # vector_db_folder = f"./vector_stores/no_requests_all_parts_chromadb_1024_256_local_embeddings_GroNLP/{embedding_function}"
-    # vector_db_folder = f"../vector_stores/no_requests_part_2_chromadb_1024_256_local_embeddings_GroNLP/{embedding_function}"
-
     with open(f"./evaluation/{evaluation_file}", "r") as file:
         evaluation = json.load(file)
 
     # If vector store folder does not exist, stop
     if not os.path.exists(vector_db_folder):
         print(
-            'There is no vector database for this folder yet. First run "python ingest.py"'
+            '[Error] ~ There is no vector database for this folder yet. First run "python ingest.py"'
         )
         exit()
 
     querier = Querier()
-    print(f"Making chain for collection: {collection_name}", flush=True)
-    print(f"Vector DB folder: {vector_db_folder}", flush=True)
     querier.make_chain(collection_name, vector_db_folder)
-
-    querier_data = querier.vector_store.get()
-    querier_data_ids = querier_data["ids"]
-    print(f"Length querier data IDs: {len(querier_data_ids)}", flush=True)
-    print(f"Max Id in data: {max([int(num) for num in querier_data_ids])}", flush=True)
-
-    print(f"Running algorithm: {complete_embedding_function}", flush=True)
-
+    
     # Determine file paths
     csv_file_path = f'./evaluation/results/{evaluation_file.split("/")[-1].replace(".json", "")}_{collection_name.replace("_part_1", "")}_{embedding_function}_request.csv'
     json_file_path = f'./evaluation/results/{evaluation_file.split("/")[-1].replace(".json", "")}_{collection_name.replace("_part_1", "")}_{embedding_function}_request_raw.json'
@@ -173,29 +119,30 @@ def main():
             print("No dossiers found in the JSON file", flush=True)
             continue
 
-        # tokenized_query = preprocess_text(key)
-        response = querier.ask_question(key)
-        source_documents = response["source_documents"]
+        documents = querier.get_documents_with_scores(key)
 
         retrieved_page_ids = []
         retrieved_dossier_ids = []
-        # scores = []
-        for doc, _ in source_documents:
-            print(doc.metadata)
-            retrieved_page_ids.append(doc.metadata["document_id"])
-            retrieved_dossier_ids.append(doc.metadata["dossier_id"])
+        scores = []
+        for document, score in documents:
+            if document.metadata["page_id"] in retrieved_page_ids:
+                print("[Info] ~ Duplicate page found, skipping.")
+                continue
             if len(retrieved_page_ids) == 20:
+                print("[Info] ~ 20 documents retrieved", flush=True)
                 break
-
-        print(value)
-
-        # Collect top documents and their scores for the current BM25 algorithm
+            retrieved_page_ids.append(document.metadata["page_id"])
+            retrieved_dossier_ids.append(document.metadata["dossier_id"])
+            scores.append(str(score))
+        if len(retrieved_page_ids) != 20:
+            print(f"[Warning] ~ Only {len(retrieved_page_ids)} retrieved.")
+        
         new_row = {
             "page_id": "N/A",
             "dossier_id": value["dossier"][0],
             "retrieved_page_ids": ", ".join(retrieved_page_ids),
             "retrieved_dossier_ids": ", ".join(retrieved_dossier_ids),
-            "scores": "",
+            "scores": ", ".join(scores),
             "number_of_correct_dossiers": retrieved_dossier_ids.count(
                 value["dossier"][0]
             ),

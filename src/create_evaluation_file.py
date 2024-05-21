@@ -29,20 +29,19 @@ def main():
         documents_directory = args.documents_directory
         evaluation_directory = args.evaluation_directory
     else:
-        print("Not all arguments are provided")
-        exit()
-    print(f"Source folder of documents: {content_folder_name}")
+        raise ValueError("Please provide all arguments.")
+    print(f"[Info] ~ Source folder of documents: {content_folder_name}")
 
     file_path = f"{documents_directory}/{content_folder_name}/woo_merged.csv.gz"
     woo_data = pd.read_csv(file_path, compression="gzip")
 
     # Find all requests
     requests = woo_data[woo_data["type"].str.lower() == "verzoek"]
-    print("Length requests: ", len(requests))
+    print("[Info] ~ Length requests: ", len(requests))
 
     # Get dataframe without the requests
     no_requests_dataframe = woo_data[woo_data["type"].str.lower() != "verzoek"]
-    print("Length no requests df: ", len(no_requests_dataframe))
+    print("[Info] ~ Length no requests df: ", len(no_requests_dataframe))
 
     # Get the aggregated text for each dossier
     # Structure: { foi_dossierId: bodytext_foi_bodyTextOCR }

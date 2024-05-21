@@ -2,6 +2,17 @@
 # python evaluate_embeddings_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --embedding_provider local_embeddings --embedding_author GroNLP --embedding_function bert-base-dutch-cased --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_GroNLP/bert-base-dutch-cased
 # python evaluate_embeddings_document_similarity.py --content_folder_name 12_dossiers_no_requests --documents_directory ./docs --embedding_provider local_embeddings --embedding_author meta-llama --embedding_function Meta-Llama-3-8B --collection_name 12_dossiers_no_requests --vector_db_folder ./vector_stores/12_dossiers_no_requests_chromadb_1024_256_local_embeddings_meta-llama/Meta-Llama-3-8B
 
+import os
+from dotenv import load_dotenv
+from huggingface_hub import login
+from sys import platform
+load_dotenv()
+login(os.environ.get("HUGGINGFACE_API_TOKEN"))
+if platform == "linux":
+    os.environ['HF_HOME'] = '/scratch/nju'
+    os.environ['HF_HUB_CACHE'] = '/scratch/nju'
+    os.environ['TRANSFORMERS_CACHE'] = '/scratch/nju'
+
 import pandas as pd
 from argparse import ArgumentParser
 from common.querier import Querier
@@ -89,13 +100,18 @@ def main():
             if document.metadata["page_id"] == row["page_id"]:
                 print("[Info] ~ Same document retrieved", flush=True)
                 continue
+            if document.metadata["page_id"] in retrieved_page_ids:
+                print("[Info] ~ Duplicate page found, skipping.")
+                continue
             if len(retrieved_page_ids) == 20:
                 print("[Info] ~ 20 documents retrieved", flush=True)
                 break
             retrieved_page_ids.append(document.metadata["page_id"])
             retrieved_dossier_ids.append(document.metadata["dossier_id"])
             scores.append(str(score))
-
+        if len(retrieved_page_ids) != 20:
+            print(f"[Warning] ~ Only {len(retrieved_page_ids)} retrieved.")
+            
         new_row = {
             "page_id": row["page_id"],
             "dossier_id": row["dossier_id"],

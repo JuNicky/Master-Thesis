@@ -96,38 +96,11 @@ class Querier:
             search_kwargs = {"k": self.chunk_k}
             if self.search_type == "similarity_score_threshold":
                 search_kwargs["score_threshold"] = self.score_threshold
-            retriever = self.vector_store.as_retriever(
-                search_type=self.search_type, search_kwargs=search_kwargs
-            )
-
-        # if self.chain_name == "conversationalretrievalchain":
-        #     # TODO: For me, the condense_question_prompt does not work and it does not change anything.
-        #     base_prompt = "Answer the question in dutch. Answer the question between the triple dashes: ---{question}---"
-        #     if settings.RETRIEVAL_METHOD == "answer_and_question":
-        #         from custom_langchain.base import CustomConversationalRetrievalChain
-        #         print("Using custom chain")
-        #         self.chain = CustomConversationalRetrievalChain.from_llm(
-        #             llm=self.llm,
-        #             retriever=retriever,
-        #             chain_type=self.chain_type,
-        #             verbose=self.chain_verbosity,
-        #             return_source_documents=True,
-        #             condense_question_prompt=PromptTemplate.from_template(base_prompt)
-        #         )
-        #     else:
-        #         self.chain = ConversationalRetrievalChain.from_llm(
-        #             llm=self.llm,
-        #             retriever=retriever,
-        #             chain_type=self.chain_type,
-        #             verbose=self.chain_verbosity,
-        #             return_source_documents=True,
-        #             condense_question_prompt=PromptTemplate.from_template(base_prompt)
-        #         )
         print("Executed Querier.make_chain")
 
     def get_documents_with_scores(self, question: str) -> List[Tuple[Document, float]]:
         most_similar_docs = self.vector_store.similarity_search_with_relevance_scores(
-            question, k=25, filter=self.filters
+            question, k=100, filter=self.filters
         )
         print("most_similar_docs: ", most_similar_docs)
         print(f"Topscore most similar docs: {most_similar_docs[0][1]}")

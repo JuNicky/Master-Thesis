@@ -1,60 +1,21 @@
 # Example with arguments:
-# python evaluate_bm25.py -a BM25Okapi -c WoogleDumps_01-04-2024_10_dossiers_no_requests_fake_stopwords -d ../docs -e evaluation_request_WoogleDumps_01-04-2024_10_dossiers_no_requests.json
-# python evaluate_bm25.py -a BM25Okapi -c 12_dossiers_no_requests -d ./docs -e evaluation_request_12_dossiers_no_requests.json
-# python evaluate_bm25.py -a BM25Okapi -c 12_dossiers_no_requests -d ./docs -e evaluation_request_60_dossiers_no_requests.json
+# python evaluate_bm25_n.py -a BM25Okapi -c WoogleDumps_01-04-2024_10_dossiers_no_requests_fake_stopwords -d ../docs -e evaluation_request_WoogleDumps_01-04-2024_10_dossiers_no_requests.json
+# python evaluate_bm25_n.py -a BM25Okapi -c 12_dossiers_no_requests -d ./docs -e evaluation_request_12_dossiers_no_requests.json
+# python evaluate_bm25_n.py -a BM25Okapi -c 12_dossiers_no_requests -d ./docs -e evaluation_request_60_dossiers_no_requests.json
+
 import heapq
 import json
 import nltk
 import os
 import pandas as pd
-import re
 from argparse import ArgumentParser
-from nltk.corpus import stopwords
-from nltk.stem import PorterStemmer
-from nltk.tokenize import word_tokenize
+from common import evaluate_helpers
 from rank_bm25 import BM25Okapi, BM25L, BM25Plus
-
-
-def preprocess_text(
-    text: str, index: int = 0, print_progress: bool = True, print_freq: int = 100
-) -> list[str]:
-    if type(text) != str:
-        return []
-    if print_progress and index and index % print_freq == 0:
-        print(f"Processing document {index}", flush=True)
-
-    # Initialize stop words and stemmer
-    stop_words = set(stopwords.words("dutch"))
-    stemmer = PorterStemmer()
-
-    # Remove punctuation
-    text = re.sub(r"[^\w\s]", "", text)
-    # Remove unnecessary whitespaces
-    text = re.sub(r"\s+", " ", text).strip()
-
-    # Tokenize
-    tokens = word_tokenize(text)
-
-    # Remove stop words and stem
-    return [stemmer.stem(word) for word in tokens if word not in stop_words]
-
-
-def tokenize(text) -> list[str]:
-    # Check if text is of type string
-    if not isinstance(text, str):
-        return []
-    # Tokenize the text
-    return word_tokenize(text)
-
-
-def check_relevance(ground_truth, retrieved) -> int:
-    # Check if the retrieved documents are relevant
-    return len(retrieved.intersection(ground_truth))
 
 
 def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name):
     # Check if chunks are present in the data
-    print(f"Running algorithm: {bm25.__class__.__name__}", flush=True)
+    print(f"[Info] ~ Running algorithm: {bm25.__class__.__name__}", flush=True)
 
     # Determine file paths
     csv_file_path = f'./evaluation/results/{evaluation_file.split(".")[0]}_{content_folder_name}_{bm25.__class__.__name__}_request.csv'
@@ -98,25 +59,23 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name):
 
     for index, (key, value) in enumerate(evaluation.items()):
         if index <= last_index:
-            print(f"Skipping index {index}", flush=True)
+            print(f"[Info] ~ Skipping index {index}", flush=True)
             continue
         results_raw = {}
         if not value.get("pages"):
-            print("No pages found in the JSON file", flush=True)
+            print("[Warning] ~ No pages found in the JSON file", flush=True)
             continue
         if not value.get("documents"):
-            print("No documents found in the JSON file", flush=True)
+            print("[Warning] ~ No documents found in the JSON file", flush=True)
             continue
         if not value.get("dossier"):
-            print("No dossiers found in the JSON file", flush=True)
+            print("[Warning] ~ No dossiers found in the JSON file", flush=True)
             continue
 
-        # tokenized_query = preprocess_text(key)
-        tokenized_query = tokenize(key)
+        # tokenized_query = evaluate_helpers.preprocess_text(key)
+        tokenized_query = evaluate_helpers.tokenize(key)
 
         doc_scores = bm25.get_scores(tokenized_query)
-
-        print(doc_scores)
 
         n_pages_result = heapq.nlargest(
             20, range(len(doc_scores)), key=doc_scores.__getitem__
@@ -125,11 +84,9 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name):
         retrieved_dossier_ids = []
         # scores = []
         for i in n_pages_result:
-            retrieved_page_ids.append(woo_data["document_id"][i])
+            retrieved_page_ids.append(woo_data["page_id"][i])
             retrieved_dossier_ids.append(woo_data["dossier_id"][i])
-
-        print(value)
-
+            
         # Collect top documents and their scores for the current BM25 algorithm
         new_row = {
             "page_id": "N/A",
@@ -167,15 +124,16 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name):
         result.loc[len(result)] = new_row
 
     loc = f'{evaluation_file.split(".")[0]}_{content_folder_name}_{bm25.__class__.__name__}_request.csv'
-    result.to_csv(f"evaluation/results/{loc}")
-
+    result_path = f"./evaluation/results/{loc}"
+    result.to_csv(result_path)
+    print(f"[Info] ~ Results written to {result_path}")
 
 def main():
     # If necessary, download the NLTK resources
     nltk.download("punkt", quiet=True)
     nltk.download("stopwords", quiet=True)
 
-    print("Successfully downloaded the NLTK resources.", flush=True)
+    print("[Info] ~ Successfully downloaded the NLTK resources.", flush=True)
 
     parser = ArgumentParser()
     parser.add_argument("-a", "--algorithm", type=str)
@@ -195,12 +153,8 @@ def main():
         else:
             algorithm = "all"
     else:
-        print(
-            "Please provide the source folder of documents, the output folder name, and the database directory.",
-            flush=True,
-        )
-        exit()
-    print(f"Source folder of documents: {content_folder_name}", flush=True)
+        raise ValueError("Please provide all arguments.")
+    print(f"[Info] ~ Source folder of documents: {content_folder_name}", flush=True)
 
     # Selecting the paths
     file_name = "woo_merged.csv.gz"
@@ -209,7 +163,7 @@ def main():
 
     woo_data = pd.read_csv(input_path, compression="gzip")
 
-    # Preprocess woo data, merge all the documents into one entry
+    # Preprocess woo data, merge all the pages into one document, instead of seperately
     if retrieve_whole_document:
         woo_data = (
             woo_data.groupby("document_id")
@@ -226,33 +180,32 @@ def main():
     # Generate corpus, which is a list of all the words per document
     corpus = woo_data["bodyText"].tolist()
 
-    print(f"Number of documents in corpus: {len(corpus)}", flush=True)
+    print(f"[Info] ~ Number of documents in corpus: {len(corpus)}", flush=True)
 
     # Do preprocessing for echt document
-    tokenized_corpus = [preprocess_text(doc) for doc in corpus]
+    tokenized_corpus = [evaluate_helpers.preprocess_text(doc) for doc in corpus]
 
     with open(evaluation_path, "r") as file:
         evaluation = json.load(file)
 
-    print(f"Number of documents in evaluation: {len(evaluation)}", flush=True)
+    print(f"[Info] ~ Number of documents in evaluation: {len(evaluation)}", flush=True)
 
     if algorithm == "BM25Okapi" or algorithm == "all":
-        print("Starting BM25Okapi", flush=True)
+        print("[Info] ~ Starting BM25Okapi", flush=True)
         bm25okapi = BM25Okapi(tokenized_corpus)
         run_bm25(woo_data, bm25okapi, evaluation, evaluation_file, content_folder_name)
-        print("BM25Okapi done", flush=True)
+        print("[Info] ~ BM25Okapi done", flush=True)
     if algorithm == "BM25L" or algorithm == "all":
-        print("Starting BM25L", flush=True)
+        print("[Info] ~ Starting BM25L", flush=True)
         bm25l = BM25L(tokenized_corpus)
         run_bm25(woo_data, bm25l, evaluation, evaluation_file, content_folder_name)
-        print("BM25L done", flush=True)
+        print("[Info] ~ BM25L done", flush=True)
     if algorithm == "BM25Plus" or algorithm == "all":
-        print("Starting BM25Plus", flush=True)
+        print("[Info] ~ Starting BM25Plus", flush=True)
         bm25plus = BM25Plus(tokenized_corpus)
         run_bm25(woo_data, bm25plus, evaluation, evaluation_file, content_folder_name)
-        print("BM25Plus done", flush=True)
+        print("[Info] ~ BM25Plus done", flush=True)
 
 
 if __name__ == "__main__":
-    print("Starting the program...", flush=True)
     main()
