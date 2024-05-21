@@ -3,6 +3,7 @@ from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.tokenize import word_tokenize
 
+
 def preprocess_text(
     text: str, index: int = 0, print_progress: bool = False, print_freq: int = 100
 ) -> list[str]:
@@ -40,6 +41,7 @@ def preprocess_text(
     # Remove stop words and stem
     return [stemmer.stem(word) for word in tokens if word not in stop_words]
 
+
 def tokenize(text: str) -> list[str]:
     """
     Tokenizes the input text into words using NLTK's word_tokenize.
@@ -55,6 +57,7 @@ def tokenize(text: str) -> list[str]:
         return []
     # Tokenize the text
     return word_tokenize(text)
+
 
 def check_relevance(ground_truth: set, retrieved: set) -> int:
     """

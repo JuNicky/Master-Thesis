@@ -6,12 +6,13 @@ import os
 from dotenv import load_dotenv
 from huggingface_hub import login
 from sys import platform
+
 load_dotenv()
 login(os.environ.get("HUGGINGFACE_API_TOKEN"))
 if platform == "linux":
-    os.environ['HF_HOME'] = '/scratch/nju'
-    os.environ['HF_HUB_CACHE'] = '/scratch/nju'
-    os.environ['TRANSFORMERS_CACHE'] = '/scratch/nju'
+    os.environ["HF_HOME"] = "/scratch/nju"
+    os.environ["HF_HUB_CACHE"] = "/scratch/nju"
+    os.environ["TRANSFORMERS_CACHE"] = "/scratch/nju"
 
 import json
 import pandas as pd
@@ -63,7 +64,7 @@ def main():
 
     querier = Querier()
     querier.make_chain(collection_name, vector_db_folder)
-    
+
     # Determine file paths
     csv_file_path = f'./evaluation/results/{evaluation_file.split("/")[-1].replace(".json", "")}_{collection_name.replace("_part_1", "")}_{embedding_function}_request.csv'
     json_file_path = f'./evaluation/results/{evaluation_file.split("/")[-1].replace(".json", "")}_{collection_name.replace("_part_1", "")}_{embedding_function}_request_raw.json'
@@ -136,7 +137,7 @@ def main():
             scores.append(str(score))
         if len(retrieved_page_ids) != 20:
             print(f"[Warning] ~ Only {len(retrieved_page_ids)} retrieved.")
-        
+
         new_row = {
             "page_id": "N/A",
             "dossier_id": value["dossier"][0],

@@ -17,7 +17,7 @@ def login_huggingface():
     if args.api_token:
         api_token = args.api_token
     elif not os.environ.get("HUGGINGFACE_API_TOKEN"):
-        api_token = os.environ["HUGGINGFACE_API_TOKEN"] 
+        api_token = os.environ["HUGGINGFACE_API_TOKEN"]
     login(api_token)
     print("[Info] ~ Logged in to Huggingface.", flush=True)
 

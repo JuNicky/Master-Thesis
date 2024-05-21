@@ -6,12 +6,13 @@ import os
 from dotenv import load_dotenv
 from huggingface_hub import login
 from sys import platform
+
 load_dotenv()
 login(os.environ.get("HUGGINGFACE_API_TOKEN"))
 if platform == "linux":
-    os.environ['HF_HOME'] = '/scratch/nju'
-    os.environ['HF_HUB_CACHE'] = '/scratch/nju'
-    os.environ['TRANSFORMERS_CACHE'] = '/scratch/nju'
+    os.environ["HF_HOME"] = "/scratch/nju"
+    os.environ["HF_HUB_CACHE"] = "/scratch/nju"
+    os.environ["TRANSFORMERS_CACHE"] = "/scratch/nju"
 
 import pandas as pd
 from argparse import ArgumentParser
@@ -111,7 +112,7 @@ def main():
             scores.append(str(score))
         if len(retrieved_page_ids) != 20:
             print(f"[Warning] ~ Only {len(retrieved_page_ids)} retrieved.")
-            
+
         new_row = {
             "page_id": row["page_id"],
             "dossier_id": row["dossier_id"],

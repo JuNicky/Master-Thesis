@@ -8,6 +8,7 @@ from argparse import ArgumentParser
 from rank_bm25 import BM25Okapi
 from common import evaluate_helpers
 
+
 def main():
     parser = ArgumentParser()
     parser.add_argument("--content_folder_name", type=str)

@@ -86,7 +86,7 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name):
         for i in n_pages_result:
             retrieved_page_ids.append(woo_data["page_id"][i])
             retrieved_dossier_ids.append(woo_data["dossier_id"][i])
-            
+
         # Collect top documents and their scores for the current BM25 algorithm
         new_row = {
             "page_id": "N/A",
@@ -127,6 +127,7 @@ def run_bm25(woo_data, bm25, evaluation, evaluation_file, content_folder_name):
     result_path = f"./evaluation/results/{loc}"
     result.to_csv(result_path)
     print(f"[Info] ~ Results written to {result_path}")
+
 
 def main():
     # If necessary, download the NLTK resources
